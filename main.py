@@ -13,7 +13,7 @@ class TextInput(BaseModel):
 class PredictionOut(BaseModel):
     energy_demand: float
 
-@app.get("/")
+@app.get("/health")
 def home():
     return {"health_check": "OK", "model_version": model_version}
 
