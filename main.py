@@ -4,7 +4,7 @@ from model.model import predict_demand_pipeline
 from model.model import __version__ as model_version
 import uvicorn
 
-app = FastAPI()
+app = FastAPI(title="Solaire Predictor API")
 
 class TextInput(BaseModel):
     country_code: str
