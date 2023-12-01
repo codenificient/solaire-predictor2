@@ -13,7 +13,7 @@ class TextInput(BaseModel):
 class PredictionOut(BaseModel):
     energy_demand: float
 
-@app.get("/health")
+@app.get("/")
 def home():
     return {"health_check": "OK", "model_version": model_version}
 
@@ -22,5 +22,3 @@ def predict(payload: TextInput):
     energy_demand = predict_demand_pipeline(payload.country_code, payload.year)
     return {"energy_demand": energy_demand}
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=443, reload=True)
