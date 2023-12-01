@@ -6,20 +6,16 @@ import uvicorn
 
 app = FastAPI()
 
-
 class TextInput(BaseModel):
     country_code: str
     year: str
 
-
 class PredictionOut(BaseModel):
     energy_demand: float
-
 
 @app.get("/")
 def home():
     return {"health_check": "OK", "model_version": model_version}
-
 
 @app.post("/predict-demand", response_model=PredictionOut)
 def predict(payload: TextInput):
