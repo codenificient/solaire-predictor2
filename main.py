@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from model.model import predict_demand_pipeline
+from model.model import predict_demand_pipeline, predict_gdp_growth
 from model.model import __version__ as model_version
 import uvicorn
 
@@ -11,7 +11,7 @@ class TextInput(BaseModel):
     year: str
 
 class PredictionOut(BaseModel):
-    energy_demand: float
+    predicted_value: float
 
 @app.get("/")
 def home():
@@ -20,5 +20,12 @@ def home():
 @app.post("/predict-demand", response_model=PredictionOut)
 def predict(payload: TextInput):
     energy_demand = predict_demand_pipeline(payload.country_code, payload.year)
-    return {"energy_demand": energy_demand}
+    return {"predicted_value": energy_demand}
 
+@app.post("/predict-gdp-growth", response_model=PredictionOut)
+def predict(payload: TextInput):
+    gdp_growth = predict_gdp_growth(payload.country_code, payload.year)
+    return {"predicted_value": gdp_growth}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
