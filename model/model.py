@@ -34,7 +34,7 @@ def predict_electricity_usage(country_code, year, use_linear=False):
     # Use the trained model to predict the value for the user-provided country and year
     predicted_value = linear_model.predict(country_code_encoded)
     adjusted_predicted_value_rmse = predicted_value * 1.2
-    print(f'Predicted Energy Usage for {country_name} in {year}: {round(adjusted_predicted_value_rmse[0], 2)}')
+    print(f'Predicted Energy Usage for {country_name} in {year}: {adjusted_predicted_value_rmse[0]:.2f}')
     return round(adjusted_predicted_value_rmse[0], 2)
 
 def predict_gdp_growth(country_code, year, use_linear=False):
@@ -61,7 +61,7 @@ def predict_gdp_growth(country_code, year, use_linear=False):
     # Use the trained model to predict the value for the user-provided country and year
     predicted_value = xgb_model.predict(country_code_encoded)
 
-    print(f'[{modeltype}] Predicted GDP Growth for {country_name} in {year}: {round(predicted_value[0], 2)}')
+    print(f'[{modeltype}] Predicted GDP Growth for {country_name} in {year}: {predicted_value[0]:.2f}')
     return round(predicted_value[0], 2)
 
 def predict_population(country_code, year, use_linear=False):
@@ -88,7 +88,7 @@ def predict_population(country_code, year, use_linear=False):
     # Use the trained model to predict the value for the user-provided country and year
     predicted_value = xgb_model.predict(country_code_encoded)
 
-    print(f'[{modeltype}] Predicted Population for {country_name} in {year}: {round(predicted_value[0])}')
+    print(f'[{modeltype}] Predicted Population for {country_name} in {year}: {predicted_value[0]:.2f}')
     return round(predicted_value[0])
 
 
@@ -116,5 +116,5 @@ def predict_electrification(country_code, year, use_linear=False):
     # Use the trained model to predict the value for the user-provided country and year
     predicted_value = xgb_model.predict(country_code_encoded)
 
-    print(f'[{modeltype}] Predicted Electrification Rate for {country_name} in {year}: {round(predicted_value[0], 2)}%')
+    print(f'[{modeltype}] Predicted Electrification Rate for {country_name} in {year}: {predicted_value[0]:.2f}%')
     return round(predicted_value[0], 2)
