@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from model.model import predict_electricity_usage, predict_gdp_growth, predict_population, predict_electrification
+from model.model import predict_electricity_usage, predict_gdp_growth, predict_population, predict_electrification, predict_population_growth
 from model.model import __version__ as model_version
 import uvicorn
 
@@ -32,6 +32,11 @@ def predict(payload: TextInput):
 def predict(payload: TextInput):
     population = predict_population(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": population}
+
+@app.post("/predict-population-growth", response_model=PredictionOut)
+def predict(payload: TextInput):
+    pop_growth = predict_population_growth(payload.country_code, payload.year, payload.use_linear)
+    return {"predicted_value": pop_growth}
 
 @app.post("/predict-electrification", response_model=PredictionOut)
 def predict(payload: TextInput):
