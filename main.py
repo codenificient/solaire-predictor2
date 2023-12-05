@@ -6,7 +6,7 @@ import uvicorn
 
 app = FastAPI(title="Solaire Predictor API")
 
-class TextInput(BaseModel):
+class UserInput(BaseModel):
     country_code: str
     year: str
     use_linear: bool
@@ -19,32 +19,32 @@ def home():
     return {"health_check": "OK", "model_version": model_version}
 
 @app.post("/predict-electricity-usage", response_model=PredictionOut)
-def predict(payload: TextInput):
+def predict(payload: UserInput):
     energy_demand = predict_electricity_usage(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": energy_demand}
 
 @app.post("/predict-gdp-total", response_model=PredictionOut)
-def predict(payload: TextInput):
+def predict(payload: UserInput):
     gdp_total = predict_gdp_total(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": gdp_total}
 
 @app.post("/predict-gdp-growth", response_model=PredictionOut)
-def predict(payload: TextInput):
+def predict(payload: UserInput):
     gdp_growth = predict_gdp_growth(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": gdp_growth}
 
 @app.post("/predict-population", response_model=PredictionOut)
-def predict(payload: TextInput):
+def predict(payload: UserInput):
     population = predict_population(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": population}
 
 @app.post("/predict-population-growth", response_model=PredictionOut)
-def predict(payload: TextInput):
+def predict(payload: UserInput):
     pop_growth = predict_population_growth(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": pop_growth}
 
-@app.post("/predict-electrification", response_model=PredictionOut)
-def predict(payload: TextInput):
+@app.post("/predict-electrification-rate", response_model=PredictionOut)
+def predict(payload: UserInput):
     rate = predict_electrification(payload.country_code, payload.year, payload.use_linear)
     return {"predicted_value": rate}
 

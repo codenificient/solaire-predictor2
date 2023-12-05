@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 import pickle
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent
 
