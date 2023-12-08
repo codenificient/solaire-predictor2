@@ -3,8 +3,30 @@ from pydantic import BaseModel
 from model.model import predict_electricity_usage, predict_gdp_growth, predict_population, predict_electrification, predict_population_growth, predict_gdp_total
 from model.model import __version__ as model_version
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(title="Solaire Predictor API")
+
+
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:3000/dashboard",
+    "https://solaire-lemon.vercel.app"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 
 class UserInput(BaseModel):
     country_code: str
