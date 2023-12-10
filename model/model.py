@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 import pickle
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent
 
@@ -39,7 +39,7 @@ def predict_electricity_usage(country_code, year, use_linear=False):
 
 def predict_gdp_growth(country_code, year, use_linear=False):
     modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_gdp-growth-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_gdp_growth-{__version__}.pkl"
+    modelname = f"{BASE_DIR}/linear_gdp_growth-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_gdp_growth-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
@@ -66,7 +66,7 @@ def predict_gdp_growth(country_code, year, use_linear=False):
 
 def predict_gdp_total(country_code, year, use_linear=False):
     modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_gdp-total-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_gdp_total-{__version__}.pkl"
+    modelname = f"{BASE_DIR}/linear_gdp_total-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_gdp_total-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
