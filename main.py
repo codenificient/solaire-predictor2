@@ -5,9 +5,7 @@ from model.model import __version__ as model_version
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
-
 app = FastAPI(title="Solaire Predictor API")
-
 
 origins = [
     "http://localhost.tiangolo.com",
