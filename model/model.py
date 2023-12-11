@@ -11,7 +11,8 @@ def load_model(modelname):
         return pickle.load(saved_model)
 
 def predict_electricity_usage(country_code, year, use_linear=False):
-    modelname = f"{BASE_DIR}/linear_electricity_usage-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_electricity_usage-{__version__}.pkl"
+    modeltype = "LINEAR MODEL" if use_linear else "GBR MODEL"
+    modelname = f"{BASE_DIR}/linear_electricity_usage-{__version__}.pkl" if use_linear else f"{BASE_DIR}/boosting_electricity_usage-{__version__}.pkl"
     linear_model = load_model(modelname)
 
     # Load the encoding mapping file
@@ -34,12 +35,12 @@ def predict_electricity_usage(country_code, year, use_linear=False):
     # Use the trained model to predict the value for the user-provided country and year
     predicted_value = linear_model.predict(country_code_encoded)
     adjusted_predicted_value_rmse = predicted_value * 1.2
-    print(f'Predicted Energy Usage for {country_name} in {year}: {adjusted_predicted_value_rmse[0]:.2f}')
+    print(f'[{modeltype}] Predicted Energy Usage for {country_name} in {year}: {adjusted_predicted_value_rmse[0]:.2f}')
     return round(adjusted_predicted_value_rmse[0], 2)
 
 def predict_gdp_growth(country_code, year, use_linear=False):
-    modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_gdp_growth-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_gdp_growth-{__version__}.pkl"
+    modeltype = "LINEAR MODEL" if use_linear else "GBR MODEL"
+    modelname = f"{BASE_DIR}/linear_gdp_growth-{__version__}.pkl" if use_linear else f"{BASE_DIR}/boosting_gdp_growth-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
@@ -65,8 +66,8 @@ def predict_gdp_growth(country_code, year, use_linear=False):
     return round(predicted_value[0], 2)
 
 def predict_gdp_total(country_code, year, use_linear=False):
-    modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_gdp_total-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_gdp_total-{__version__}.pkl"
+    modeltype = "LINEAR MODEL" if use_linear else "GBR MODEL"
+    modelname = f"{BASE_DIR}/linear_gdp_total-{__version__}.pkl" if use_linear else f"{BASE_DIR}/boosting_gdp_total-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
@@ -92,8 +93,8 @@ def predict_gdp_total(country_code, year, use_linear=False):
     return round(predicted_value[0], 2)
 
 def predict_population(country_code, year, use_linear=False):
-    modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_population-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_population-{__version__}.pkl"
+    modeltype = "LINEAR MODEL" if use_linear else "GBR MODEL"
+    modelname = f"{BASE_DIR}/linear_population-{__version__}.pkl" if use_linear else f"{BASE_DIR}/boosting_population-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
@@ -120,8 +121,8 @@ def predict_population(country_code, year, use_linear=False):
 
 
 def predict_population_growth(country_code, year, use_linear=False):
-    modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_population_growth-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_population_growth-{__version__}.pkl"
+    modeltype = "LINEAR MODEL" if use_linear else "GBR MODEL"
+    modelname = f"{BASE_DIR}/linear_population_growth-{__version__}.pkl" if use_linear else f"{BASE_DIR}/boosting_population_growth-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
@@ -147,8 +148,8 @@ def predict_population_growth(country_code, year, use_linear=False):
     return round(predicted_value[0], 2)
 
 def predict_electrification(country_code, year, use_linear=False):
-    modeltype = "LINEAR MODEL" if use_linear else "XGB MODEL"
-    modelname = f"{BASE_DIR}/linear_electrification_rate-{__version__}.pkl" if use_linear else f"{BASE_DIR}/xgb_electrification_rate-{__version__}.pkl"
+    modeltype = "LINEAR MODEL" if use_linear else "GBR MODEL"
+    modelname = f"{BASE_DIR}/linear_electrification_rate-{__version__}.pkl" if use_linear else f"{BASE_DIR}/boosting_electrification_rate-{__version__}.pkl"
     xgb_model = load_model(modelname)
     # Load the encoding mapping file
     with open(f"{BASE_DIR}/encoding_mapping.csv", "rb") as csv_encoding:
