@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="dark light" />
+		<title>Solaire Predictor — Energy &amp; economic forecasts via FastAPI</title>
+		<meta
+			name="description"
+			content="A FastAPI service that predicts a country's electricity usage, GDP, population, and electrification rate from World Bank historical data using scikit-learn regression."
+		/>
+		<link
+			rel="icon"
+			href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E"
+		/>
+		<script>
+			(function () {
+				try {
+					var stored = localStorage.getItem("theme");
+					var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+					var theme = stored || (systemDark ? "dark" : "light");
+					document.documentElement.dataset.theme = theme;
+				} catch (e) {
+					document.documentElement.dataset.theme = "dark";
+				}
+			})();
+		</script>
+		<style>
+			:root, :root[data-theme="dark"] {
+				--bg: #0d1117;
+				--bg-elev: #161b22;
+				--bg-elev-2: #1c2128;
+				--border: #30363d;
+				--border-strong: #444c56;
+				--text: #e6edf3;
+				--text-muted: #8b949e;
+				--accent: #f1c40f;
+				--accent-2: #e67e22;
+				--accent-glow: rgba(241, 196, 15, 0.34);
+				--success: #3fb950;
+				--radius: 10px;
+				--font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+				--mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+			}
+			:root[data-theme="light"] {
+				--bg: #ffffff;
+				--bg-elev: #f6f8fa;
+				--bg-elev-2: #eaeef2;
+				--border: #d0d7de;
+				--border-strong: #afb8c1;
+				--text: #1f2328;
+				--text-muted: #59636e;
+				--accent: #b97a00;
+				--accent-2: #b75c00;
+				--accent-glow: rgba(241, 196, 15, 0.22);
+			}
+			* { box-sizing: border-box; }
+			html, body { margin: 0; padding: 0; }
+			body {
+				font-family: var(--font);
+				background: var(--bg);
+				color: var(--text);
+				line-height: 1.55;
+				-webkit-font-smoothing: antialiased;
+				min-height: 100vh;
+				background-image:
+					radial-gradient(800px 400px at 80% -10%, var(--accent-glow), transparent 70%),
+					radial-gradient(700px 400px at -10% 10%, rgba(230, 126, 34, 0.18), transparent 70%);
+			}
+			a { color: var(--accent); text-decoration: none; }
+			a:hover { text-decoration: underline; }
+
+			.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+			header.site {
+				display: flex; align-items: center; justify-content: space-between;
+				padding: 18px 0; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);
+			}
+			.logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+			.logo .dot { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--accent-glow); }
+			nav.site { display: flex; gap: 18px; align-items: center; font-size: 14px; color: var(--text-muted); }
+			nav.site a { color: var(--text-muted); }
+			nav.site a:hover { color: var(--text); }
+			.theme-toggle {
+				background: var(--bg-elev); border: 1px solid var(--border); color: var(--text);
+				width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+			}
+			.theme-toggle:hover { border-color: var(--border-strong); }
+			.theme-toggle .icon.sun { display: none; }
+			.theme-toggle .icon.moon { display: block; }
+			[data-theme="light"] .theme-toggle .icon.sun { display: block; }
+			[data-theme="light"] .theme-toggle .icon.moon { display: none; }
+
+			.hero { padding: 64px 0 32px; max-width: 760px; }
+			.pill {
+				display: inline-block; padding: 4px 10px; border: 1px solid var(--border);
+				border-radius: 999px; font-size: 12px; color: var(--text-muted); background: var(--bg-elev);
+			}
+			h1 { font-size: clamp(34px, 5vw, 54px); line-height: 1.05; letter-spacing: -0.025em; margin: 14px 0; font-weight: 700; }
+			.hero p { color: var(--text-muted); font-size: 17px; max-width: 580px; margin: 0 0 26px; }
+			.cta { display: flex; gap: 10px; flex-wrap: wrap; }
+			.btn {
+				display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 8px;
+				font-weight: 500; font-size: 14px; transition: all 0.15s; cursor: pointer;
+				border: 1px solid var(--border); background: var(--bg-elev); color: var(--text);
+			}
+			.btn:hover { border-color: var(--border-strong); text-decoration: none; }
+			.btn.primary { background: var(--accent); border-color: var(--accent); color: #1a1300; }
+			.btn.primary:hover { filter: brightness(1.08); }
+
+			section { padding: 36px 0; }
+			h2 { font-size: 22px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+			.sub { color: var(--text-muted); font-size: 14px; margin: 0 0 20px; }
+
+			.card { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+
+			.demo-grid { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start; }
+			@media (max-width: 820px) { .demo-grid { grid-template-columns: 1fr; } }
+
+			.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+			.field label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+			.field input, .field select {
+				background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text);
+				padding: 8px 10px; border-radius: 6px; font: inherit; font-size: 14px;
+			}
+			.field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+			.checkbox { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--text); }
+			.checkbox input { width: auto; margin: 0; accent-color: var(--accent); }
+
+			.result {
+				font-family: var(--mono); font-size: 30px; font-weight: 600; color: var(--accent);
+				padding: 24px; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: var(--radius);
+				text-align: center; margin-bottom: 14px;
+			}
+			.result .small { font-size: 13px; color: var(--text-muted); display: block; margin-top: 6px; font-weight: 400; }
+			.curl-block {
+				margin: 12px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 6px;
+				background: var(--bg-elev-2); color: var(--text); font-family: var(--mono); font-size: 12px;
+				line-height: 1.5; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+			}
+
+			.endpoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+			.endpoint .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+			.endpoint .path {
+				display: block; font-family: var(--mono); font-size: 13px; color: var(--text); margin: 6px 0 4px;
+			}
+			.endpoint .desc { font-size: 13px; color: var(--text-muted); }
+			.method-pill { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; margin-right: 6px; background: rgba(63, 185, 80, 0.18); color: #3fb950; }
+
+			.status {
+				margin-top: 8px; padding: 8px 10px; border-radius: 6px; font-size: 12px;
+				border: 1px solid var(--border); background: var(--bg-elev-2); color: var(--text-muted);
+			}
+			.status.error { border-color: #f85149; color: #f85149; }
+			.status.loading { color: var(--accent); }
+
+			footer.site {
+				margin-top: 40px; padding: 32px 0; border-top: 1px solid var(--border);
+				color: var(--text-muted); font-size: 13px;
+				display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+			}
+			.icon { width: 16px; height: 16px; }
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header class="site">
+				<div class="logo">
+					<span class="dot"></span>
+					<span>Solaire Predictor</span>
+				</div>
+				<nav class="site">
+					<a href="#demo">Demo</a>
+					<a href="#endpoints">API</a>
+					<a href="https://github.com/codenificient/solaire-predictor2" target="_blank" rel="noopener">GitHub</a>
+					<button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">
+						<svg class="icon sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<circle cx="12" cy="12" r="4" />
+							<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+						</svg>
+						<svg class="icon moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+						</svg>
+					</button>
+				</nav>
+			</header>
+
+			<section class="hero">
+				<span class="pill">FastAPI · scikit-learn · World Bank data</span>
+				<h1>Forecast a country's energy and economy.</h1>
+				<p>
+					Solaire Predictor is a small FastAPI service that predicts six metrics
+					— electricity usage, GDP total, GDP growth, population, population
+					growth, and electrification rate — for any country, at any future
+					year. Trained on World Bank historical data with scikit-learn
+					regression, deployed standalone on the Afrotomation cluster.
+				</p>
+				<div class="cta">
+					<a class="btn primary" href="#demo">Try a prediction</a>
+					<a class="btn" href="https://github.com/codenificient/solaire-predictor2" target="_blank" rel="noopener">View on GitHub</a>
+				</div>
+			</section>
+
+			<section id="demo">
+				<h2>Live prediction</h2>
+				<p class="sub">
+					Pick a metric, country code, and target year. The form POSTs the same
+					JSON your code would send.
+				</p>
+				<div class="demo-grid">
+					<form class="card controls" id="form">
+						<div class="field">
+							<label for="metric">Metric</label>
+							<select id="metric" name="metric">
+								<option value="predict-electricity-usage">Electricity usage</option>
+								<option value="predict-gdp-total">GDP (total)</option>
+								<option value="predict-gdp-growth">GDP growth %</option>
+								<option value="predict-population">Population</option>
+								<option value="predict-population-growth">Population growth %</option>
+								<option value="predict-electrification-rate">Electrification rate %</option>
+							</select>
+						</div>
+						<div class="field">
+							<label for="country">Country code (ISO-3)</label>
+							<input id="country" name="country" type="text" value="BFA" autocomplete="off" spellcheck="false" maxlength="3" style="text-transform: uppercase;" />
+						</div>
+						<div class="field">
+							<label for="year">Year</label>
+							<input id="year" name="year" type="text" value="2030" autocomplete="off" spellcheck="false" pattern="\d{4}" />
+						</div>
+						<label class="checkbox">
+							<input type="checkbox" id="useLinear" checked />
+							<span>Use linear model (else: polynomial)</span>
+						</label>
+						<button type="button" class="btn primary" id="goBtn" style="margin-top: 8px;">Predict</button>
+						<div class="status" id="status">Pick a metric and click Predict.</div>
+					</form>
+					<div class="card preview">
+						<div id="result" class="result">—<span class="small">prediction will appear here</span></div>
+						<div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px;">curl equivalent:</div>
+						<pre class="curl-block" id="curl"># pick a metric to see the request</pre>
+					</div>
+				</div>
+			</section>
+
+			<section id="endpoints">
+				<h2>API surface</h2>
+				<p class="sub">All prediction endpoints accept the same JSON body and return the same shape.</p>
+				<div class="endpoints">
+					<div class="card endpoint">
+						<span class="label">Electricity</span>
+						<span class="path"><span class="method-pill">POST</span>/predict-electricity-usage</span>
+						<span class="desc">kWh/capita/year for the requested country &amp; year.</span>
+					</div>
+					<div class="card endpoint">
+						<span class="label">GDP total</span>
+						<span class="path"><span class="method-pill">POST</span>/predict-gdp-total</span>
+						<span class="desc">Total GDP in current US$.</span>
+					</div>
+					<div class="card endpoint">
+						<span class="label">GDP growth</span>
+						<span class="path"><span class="method-pill">POST</span>/predict-gdp-growth</span>
+						<span class="desc">Annual GDP growth rate (%).</span>
+					</div>
+					<div class="card endpoint">
+						<span class="label">Population</span>
+						<span class="path"><span class="method-pill">POST</span>/predict-population</span>
+						<span class="desc">Total population count.</span>
+					</div>
+					<div class="card endpoint">
+						<span class="label">Pop growth</span>
+						<span class="path"><span class="method-pill">POST</span>/predict-population-growth</span>
+						<span class="desc">Annual population growth rate (%).</span>
+					</div>
+					<div class="card endpoint">
+						<span class="label">Electrification</span>
+						<span class="path"><span class="method-pill">POST</span>/predict-electrification-rate</span>
+						<span class="desc">% of population with grid access.</span>
+					</div>
+				</div>
+				<p class="sub" style="margin-top: 14px;">
+					Body for every POST: <code>{"country_code": "BFA", "year": "2030", "use_linear": true}</code>.
+					Response: <code>{"predicted_value": &lt;float&gt;}</code>.
+				</p>
+			</section>
+
+			<footer class="site">
+				<div>
+					Forked from
+					<a href="https://github.com/mihaiandrei97/fastapi-vercel-tutorial" target="_blank" rel="noopener">mihaiandrei97/fastapi-vercel-tutorial</a>
+					— retrained for solar &amp; energy use cases.
+				</div>
+				<div>
+					<a href="/api/health">/api/health</a>
+				</div>
+			</footer>
+		</div>
+
+		<script>
+			const $ = (id) => document.getElementById(id);
+			$("themeToggle").addEventListener("click", () => {
+				const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+				document.documentElement.dataset.theme = next;
+				try { localStorage.setItem("theme", next); } catch (e) {}
+			});
+
+			const metricSelect = $("metric");
+			const countryInput = $("country");
+			const yearInput = $("year");
+			const useLinearChk = $("useLinear");
+			const goBtn = $("goBtn");
+			const status = $("status");
+			const result = $("result");
+			const curlPre = $("curl");
+
+			const labelFor = {
+				"predict-electricity-usage": "kWh / capita / year",
+				"predict-gdp-total": "USD",
+				"predict-gdp-growth": "% per year",
+				"predict-population": "people",
+				"predict-population-growth": "% per year",
+				"predict-electrification-rate": "% of population"
+			};
+
+			function fmtNumber(n, key) {
+				if (n == null || isNaN(n)) return String(n);
+				if (key === "predict-gdp-total" || key === "predict-population") {
+					return Math.round(n).toLocaleString();
+				}
+				return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+			}
+
+			function buildBody() {
+				return {
+					country_code: countryInput.value.trim().toUpperCase(),
+					year: yearInput.value.trim(),
+					use_linear: useLinearChk.checked,
+				};
+			}
+
+			function updateCurl() {
+				const path = "/" + metricSelect.value;
+				const body = buildBody();
+				curlPre.textContent =
+					"curl -X POST " + window.location.origin + path + " \\\n" +
+					"  -H 'Content-Type: application/json' \\\n" +
+					"  -d '" + JSON.stringify(body) + "'";
+			}
+
+			async function go() {
+				const path = "/" + metricSelect.value;
+				const body = buildBody();
+				if (!body.country_code || body.country_code.length !== 3 || !/^\d{4}$/.test(body.year)) {
+					status.textContent = "Use a 3-letter ISO country code and a 4-digit year.";
+					status.className = "status error";
+					return;
+				}
+				status.textContent = "Predicting…";
+				status.className = "status loading";
+				updateCurl();
+				try {
+					const res = await fetch(path, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(body),
+					});
+					const data = await res.json();
+					if (!res.ok) {
+						status.textContent = (data && (data.detail || data.message)) || ("HTTP " + res.status);
+						status.className = "status error";
+						return;
+					}
+					const v = data.predicted_value;
+					const unit = labelFor[metricSelect.value] || "";
+					result.innerHTML = fmtNumber(v, metricSelect.value) +
+						'<span class="small">' + unit + ' · ' + body.country_code + ' · ' + body.year +
+						' · ' + (body.use_linear ? "linear" : "polynomial") + '</span>';
+					status.textContent = "Done.";
+					status.className = "status";
+				} catch (err) {
+					status.textContent = "Network error: " + (err && err.message || err);
+					status.className = "status error";
+				}
+			}
+
+			[metricSelect, countryInput, yearInput, useLinearChk].forEach((el) => {
+				el.addEventListener("input", updateCurl);
+				el.addEventListener("change", updateCurl);
+			});
+			goBtn.addEventListener("click", go);
+			updateCurl();
+		</script>
+	</body>
+</html>
